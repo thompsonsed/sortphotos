@@ -36,12 +36,13 @@ import re
 import locale
 
 # Setting locale to the 'local' value
-locale.setlocale(locale.LC_ALL, '')
+locale.setlocale(locale.LC_ALL, "")
 
-exiftool_location = os.path.join(os.path.dirname(os.path.realpath(__file__)), 'Image-ExifTool', 'exiftool')
+exiftool_location = os.path.join(os.path.dirname(os.path.realpath(__file__)), "Image-ExifTool", "exiftool")
 
 
 # -------- convenience methods -------------
+
 
 def parse_date_exif(date_string):
     """
@@ -142,11 +143,11 @@ def get_oldest_timestamp(data, additional_groups_to_ignore, additional_tags_to_i
     oldest_keys = []
 
     # save src file
-    src_file = data['SourceFile']
+    src_file = data["SourceFile"]
 
     # ssetup tags to ignore
-    ignore_groups = ['ICC_Profile'] + additional_groups_to_ignore
-    ignore_tags = ['SourceFile', 'XMP:HistoryWhen'] + additional_tags_to_ignore
+    ignore_groups = ["ICC_Profile"] + additional_groups_to_ignore
+    ignore_tags = ["SourceFile", "XMP:HistoryWhen"] + additional_tags_to_ignore
 
     # First check if the original key is there
     date_time_original_key = "EXIF:DateTimeOriginal"
@@ -214,7 +215,7 @@ def check_for_early_morning_photos(date, day_begins):
     """check for early hour photos to be grouped with previous day"""
 
     if date.hour < day_begins:
-        print('moving this photo to the previous day for classification purposes (day_begins=' + str(day_begins) + ')')
+        print("moving this photo to the previous day for classification purposes (day_begins=" + str(day_begins) + ")")
         date = date - timedelta(hours=date.hour + 1)  # push it to the day before for classificiation purposes
 
     return date
@@ -263,10 +264,22 @@ def check_for_early_morning_photos(date, day_begins):
 # ---------------------------------------
 
 
-def sortPhotos(src_dir, dest_dir, sort_format, rename_format, recursive=False,
-               copy_files=False, test=False, remove_duplicates=True, day_begins=0,
-               additional_groups_to_ignore=['File'], additional_tags_to_ignore=[],
-               use_only_groups=None, use_only_tags=None, keep_filename=False):
+def sortPhotos(
+    src_dir,
+    dest_dir,
+    sort_format,
+    rename_format,
+    recursive=False,
+    copy_files=False,
+    test=False,
+    remove_duplicates=True,
+    day_begins=0,
+    additional_groups_to_ignore=["File"],
+    additional_tags_to_ignore=[],
+    use_only_groups=None,
+    use_only_tags=None,
+    keep_filename=False,
+):
     """
     This function is a convenience wrapper around ExifTool based on common usage scenarios for sortphotos.py
 
@@ -311,28 +324,28 @@ def sortPhotos(src_dir, dest_dir, sort_format, rename_format, recursive=False,
 
     # some error checking
     if not os.path.exists(src_dir):
-        raise Exception('Source directory does not exist')
+        raise Exception("Source directory does not exist")
 
     # setup arguments to exiftool
-    args = ['-j', '-a', '-G']
+    args = ["-j", "-a", "-G"]
 
     # setup tags to ignore
     if use_only_tags is not None:
         additional_groups_to_ignore = []
         additional_tags_to_ignore = []
         for t in use_only_tags:
-            args += ['-' + t]
+            args += ["-" + t]
 
     elif use_only_groups is not None:
         additional_groups_to_ignore = []
         for g in use_only_groups:
-            args += ['-' + g + ':Time:All']
+            args += ["-" + g + ":Time:All"]
 
     else:
-        args += ['-time:all']
+        args += ["-time:all"]
 
     if recursive:
-        args += ['-r']
+        args += ["-r"]
 
     args += [src_dir]
 
@@ -345,14 +358,15 @@ def sortPhotos(src_dir, dest_dir, sort_format, rename_format, recursive=False,
     metadata = []
     with exiftool.ExifTool() as et:
         scalar = 100
-        iterator = (files[i:i + scalar] for i in range(0, len(files), scalar))
+        iterator = (files[i : i + scalar] for i in range(0, len(files), scalar))
         for each in tqdm(iterator, total=len(files) / scalar, unit_scale=scalar):
             metadata.extend(et.get_metadata_batch(each))
 
     excluded = [x for x in metadata if "ExifTool:Error" in x.keys()]
     metadata = [x for x in metadata if "ExifTool:Error" not in x.keys()]
     logging.info(
-        "Found {} files, of which {} will be parsed (ignoring {}).".format(len(files), len(metadata), len(excluded)))
+        "Found {} files, of which {} will be parsed (ignoring {}).".format(len(files), len(metadata), len(excluded))
+    )
     for i in excluded:
         logging.info("Ignoring {}".format(i["SourceFile"]))
 
@@ -365,26 +379,26 @@ def sortPhotos(src_dir, dest_dir, sort_format, rename_format, recursive=False,
         src_file, date, keys = get_oldest_timestamp(data, additional_groups_to_ignore, additional_tags_to_ignore)
 
         # fixes further errors when using unicode characters like "\u20AC"
-        src_file.encode('utf-8')
+        src_file.encode("utf-8")
 
         # check if no valid date found
         if not date:
-            logging.info('No valid dates were found using the specified tags.  File will remain where it is.')
+            logging.info("No valid dates were found using the specified tags.  File will remain where it is.")
 
         # ignore hidden files
-        if os.path.basename(src_file).startswith('.'):
-            logging.info('hidden file.  will be skipped')
+        if os.path.basename(src_file).startswith("."):
+            logging.info("hidden file.  will be skipped")
             continue
 
-        logging.info('Date/Time: {}'.format(date))
-        logging.info('Corresponding Tags: ' + ', '.join(keys))
+        logging.info("Date/Time: {}".format(date))
+        logging.info("Corresponding Tags: " + ", ".join(keys))
 
         # early morning photos can be grouped with previous day (depending on user setting)
         date = check_for_early_morning_photos(date, day_begins)
 
         # create folder structure
         dir_structure = date.strftime(sort_format)
-        dirs = dir_structure.split('/')
+        dirs = dir_structure.split("/")
         dest_file = dest_dir
         for thedir in dirs:
             dest_file = os.path.join(dest_file, thedir)
@@ -402,11 +416,11 @@ def sortPhotos(src_dir, dest_dir, sort_format, rename_format, recursive=False,
         dest_file = os.path.join(dest_file, filename)
         root, ext = os.path.splitext(dest_file)
 
-        name = 'Destination '
+        name = "Destination "
         if copy_files:
-            name += '(copy): '
+            name += "(copy): "
         else:
-            name += '(move): '
+            name += "(move): "
         logging.info(name + dest_file)
 
         # check for collisions
@@ -416,24 +430,25 @@ def sortPhotos(src_dir, dest_dir, sort_format, rename_format, recursive=False,
         while True:
 
             if (not test and os.path.isfile(dest_file)) or (
-                    test and dest_file in test_file_dict.keys()):  # check for existing name
+                test and dest_file in test_file_dict.keys()
+            ):  # check for existing name
                 if test:
                     dest_compare = test_file_dict[dest_file]
                 else:
                     dest_compare = dest_file
                 if remove_duplicates and filecmp.cmp(src_file, dest_compare):  # check for identical files
                     fileIsIdentical = True
-                    logging.error('Identical file already exists at {}.  Duplicate will be ignored.'.format(src_file))
+                    logging.error("Identical file already exists at {}.  Duplicate will be ignored.".format(src_file))
                     break
 
                 else:  # name is same, but file is different
                     if keep_filename:
                         orig_filename = os.path.splitext(os.path.basename(src_file))[0]
-                        dest_file = root + '_' + orig_filename + '_' + str(append) + ext
+                        dest_file = root + "_" + orig_filename + "_" + str(append) + ext
                     else:
-                        dest_file = root + '_' + str(append) + ext
+                        dest_file = root + "_" + str(append) + ext
                     append += 1
-                    logging.error('Same name already exists...renaming to: {}'.format(dest_file))
+                    logging.error("Same name already exists...renaming to: {}".format(dest_file))
 
             else:
                 break
@@ -457,52 +472,91 @@ def main():
     import argparse
 
     # setup command line parsing
-    parser = argparse.ArgumentParser(formatter_class=argparse.RawTextHelpFormatter,
-                                     description='Sort files (primarily photos and videos) into folders by date\nusing EXIF and other metadata')
-    parser.add_argument('src_dir', type=str, help='source directory')
-    parser.add_argument('dest_dir', type=str, help='destination directory')
-    parser.add_argument('-r', '--recursive', action='store_true', help='search src_dir recursively')
-    parser.add_argument('-c', '--copy', action='store_true', help='copy files instead of move')
-    parser.add_argument('-v', '--verbose', action='store_true', help="use verbose logging")
-    parser.add_argument('-vv', '--vverbose', action='store_true', help="use very verbose logging")
+    parser = argparse.ArgumentParser(
+        formatter_class=argparse.RawTextHelpFormatter,
+        description="Sort files (primarily photos and videos) into folders by date\nusing EXIF and other metadata",
+    )
+    parser.add_argument("src_dir", type=str, help="source directory")
+    parser.add_argument("dest_dir", type=str, help="destination directory")
+    parser.add_argument("-r", "--recursive", action="store_true", help="search src_dir recursively")
+    parser.add_argument("-c", "--copy", action="store_true", help="copy files instead of move")
+    parser.add_argument("-v", "--verbose", action="store_true", help="use verbose logging")
+    parser.add_argument("-vv", "--vverbose", action="store_true", help="use very verbose logging")
 
-    parser.add_argument('-t', '--test', action='store_true',
-                        help='run a test.  files will not be moved/copied\ninstead you will just a list of would happen')
-    parser.add_argument('--sort', type=str, default='%Y/%m-%b',
-                        help="choose destination folder structure using datetime format \n\
+    parser.add_argument(
+        "-t",
+        "--test",
+        action="store_true",
+        help="run a test.  files will not be moved/copied\ninstead you will just a list of would happen",
+    )
+    parser.add_argument(
+        "--sort",
+        type=str,
+        default="%Y/%m-%b",
+        help="choose destination folder structure using datetime format \n\
     https://docs.python.org/2/library/datetime.html#strftime-and-strptime-behavior. \n\
     Use forward slashes / to indicate subdirectory(ies) (independent of your OS convention). \n\
     The default is '%%Y/%%m-%%b', which separates by year then month \n\
-    with both the month number and name (e.g., 2012/02-Feb).")
-    parser.add_argument('--rename', type=str, default=None,
-                        help="rename file using format codes \n\
+    with both the month number and name (e.g., 2012/02-Feb).",
+    )
+    parser.add_argument(
+        "--rename",
+        type=str,
+        default=None,
+        help="rename file using format codes \n\
     https://docs.python.org/2/library/datetime.html#strftime-and-strptime-behavior. \n\
-    default is None which just uses original filename")
-    parser.add_argument('--keep-filename', action='store_true',
-                        help='In case of duplicated output filenames an increasing number and the original file name will be appended',
-                        default=False)
-    parser.add_argument('--remove-duplicates', dest="remove_duplicates", action="store_true",
-                        help='If file is a duplicate ignore it.')
-    parser.add_argument('--day-begins', type=int, default=0, help='hour of day that new day begins (0-23), \n\
-    defaults to 0 which corresponds to midnight.  Useful for grouping pictures with previous day.')
-    parser.add_argument('--ignore-groups', type=str, nargs='+',
-                        default=[],
-                        help='a list of tag groups that will be ignored for date informations.\n\
+    default is None which just uses original filename",
+    )
+    parser.add_argument(
+        "--keep-filename",
+        action="store_true",
+        help="In case of duplicated output filenames an increasing number and the original file name will be appended",
+        default=False,
+    )
+    parser.add_argument(
+        "--remove-duplicates", dest="remove_duplicates", action="store_true", help="If file is a duplicate ignore it."
+    )
+    parser.add_argument(
+        "--day-begins",
+        type=int,
+        default=0,
+        help="hour of day that new day begins (0-23), \n\
+    defaults to 0 which corresponds to midnight.  Useful for grouping pictures with previous day.",
+    )
+    parser.add_argument(
+        "--ignore-groups",
+        type=str,
+        nargs="+",
+        default=[],
+        help="a list of tag groups that will be ignored for date informations.\n\
     list of groups and tags here: http://www.sno.phy.queensu.ca/~phil/exiftool/TagNames/\n\
-    by default the group \'File\' is ignored which contains file timestamp data')
-    parser.add_argument('--ignore-tags', type=str, nargs='+',
-                        default=[],
-                        help='a list of tags that will be ignored for date informations.\n\
+    by default the group 'File' is ignored which contains file timestamp data",
+    )
+    parser.add_argument(
+        "--ignore-tags",
+        type=str,
+        nargs="+",
+        default=[],
+        help="a list of tags that will be ignored for date informations.\n\
     list of groups and tags here: http://www.sno.phy.queensu.ca/~phil/exiftool/TagNames/\n\
-    the full tag name needs to be included (e.g., EXIF:CreateDate)')
-    parser.add_argument('--use-only-groups', type=str, nargs='+',
-                        default=None,
-                        help='specify a restricted set of groups to search for date information\n\
-    e.g., EXIF')
-    parser.add_argument('--use-only-tags', type=str, nargs='+',
-                        default=None,
-                        help='specify a restricted set of tags to search for date information\n\
-    e.g., EXIF:CreateDate')
+    the full tag name needs to be included (e.g., EXIF:CreateDate)",
+    )
+    parser.add_argument(
+        "--use-only-groups",
+        type=str,
+        nargs="+",
+        default=None,
+        help="specify a restricted set of groups to search for date information\n\
+    e.g., EXIF",
+    )
+    parser.add_argument(
+        "--use-only-tags",
+        type=str,
+        nargs="+",
+        default=None,
+        help="specify a restricted set of tags to search for date information\n\
+    e.g., EXIF:CreateDate",
+    )
 
     # parse command line arguments
     args = parser.parse_args()
@@ -512,11 +566,23 @@ def main():
         logging.getLogger().setLevel(40)
     else:
         logging.getLogger().setLevel(30)
-    sortPhotos(args.src_dir, args.dest_dir, args.sort, args.rename, args.recursive,
-               args.copy, args.test, args.remove_duplicates, args.day_begins,
-               args.ignore_groups, args.ignore_tags, args.use_only_groups,
-               args.use_only_tags, args.keep_filename)
+    sortPhotos(
+        args.src_dir,
+        args.dest_dir,
+        args.sort,
+        args.rename,
+        args.recursive,
+        args.copy,
+        args.test,
+        args.remove_duplicates,
+        args.day_begins,
+        args.ignore_groups,
+        args.ignore_tags,
+        args.use_only_groups,
+        args.use_only_tags,
+        args.keep_filename,
+    )
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     main()

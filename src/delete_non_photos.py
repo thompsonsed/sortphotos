@@ -50,10 +50,10 @@ def main():
     import argparse
 
     # setup command line parsing
-    parser = argparse.ArgumentParser(description='Deletes files which cannot be parsed by EXIF.')
-    parser.add_argument('src_dir', type=str, help='source directory')
-    parser.add_argument('-t', '--test', action='store_true', help="run a test of the removal", dest="test")
-    parser.add_argument('-v', '--verbose', action='store_true', help="output logging information", dest="verbose")
+    parser = argparse.ArgumentParser(description="Deletes files which cannot be parsed by EXIF.")
+    parser.add_argument("src_dir", type=str, help="source directory")
+    parser.add_argument("-t", "--test", action="store_true", help="run a test of the removal", dest="test")
+    parser.add_argument("-v", "--verbose", action="store_true", help="output logging information", dest="verbose")
     args = parser.parse_args()
     if args.verbose:
         logging.getLogger().setLevel(20)
@@ -63,6 +63,7 @@ def main():
     if not path.exists():
         raise IOError("Path does not exist at {}.".format(path))
     remove_file_if_image(path, test=args.test)
+
 
 if __name__ == "__main__":
     main()

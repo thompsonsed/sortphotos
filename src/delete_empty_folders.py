@@ -14,13 +14,14 @@ def remove_empty_folder(path: pathlib.Path) -> None:
             except IOError:
                 logging.info("Directory at {} is not empty.".format(i))
 
+
 def main():
     import argparse
 
     # setup command line parsing
-    parser = argparse.ArgumentParser(description='Deletes empty folders in a directory.')
-    parser.add_argument('src_dir', type=str, help='source directory')
-    parser.add_argument('-v', '--verbose', action='store_true', help="output logging information", dest="verbose")
+    parser = argparse.ArgumentParser(description="Deletes empty folders in a directory.")
+    parser.add_argument("src_dir", type=str, help="source directory")
+    parser.add_argument("-v", "--verbose", action="store_true", help="output logging information", dest="verbose")
     args = parser.parse_args()
     if args.verbose:
         logging.getLogger().setLevel(20)
@@ -30,6 +31,7 @@ def main():
     if not path.exists():
         raise IOError("Path does not exist at {}.".format(path))
     remove_empty_folder(path)
+
 
 if __name__ == "__main__":
     main()
