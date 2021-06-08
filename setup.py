@@ -11,5 +11,9 @@ setup(
     packages=find_packages(),
     include_package_data=True,
     license="MIT License",
-    entry_points={"console_scripts": ["sortphotos = src.sortphotos:main",]},
+    entry_points={
+        "console_scripts": [
+            "sortphotos = src.sortphotos:main",
+        ]
+    },
 )
